@@ -1,5 +1,8 @@
 from pydantic import BaseModel
-from typing import List, Optional
+from typing import List, Optional, Generic, TypeVar
+from pydantic.generics import GenericModel
+
+T = TypeVar("T")  # Generic type for data field
 
 class RouteBase(BaseModel):
     name: str
@@ -26,3 +29,9 @@ class RouteUpdate(BaseModel):
 
 class RouteInDB(RouteBase):
     id: str
+
+class ApiResponse(GenericModel, Generic[T]):
+    statusCode: int
+    status: str
+    message: str
+    data: T

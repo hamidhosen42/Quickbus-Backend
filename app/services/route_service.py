@@ -1,28 +1,40 @@
-# app/services/route_service.py
-from app.db.mongo import db
-from app.models.route import RouteCreate, RouteUpdate, RouteInDB
-from bson import ObjectId
+from typing import List, Optional
+from uuid import uuid4
+from app.models.route import RouteCreate, RouteInDB, RouteUpdate
 
-def get_all_routes():
-    routes = db.routes.find()
-    return [RouteInDB(**r, id=str(r["_id"])) for r in routes]
+# In-memory storage for demonstration purposes
+routes_db: List[RouteInDB] = []
 
-def create_route(route: RouteCreate):
-    route_dict = route.dict()
-    result = db.routes.insert_one(route_dict)
-    return RouteInDB(**route_dict, id=str(result.inserted_id))
+def get_all_routes() -> List[RouteInDB]:
+    return routes_db
 
-def update_route(route_id: str, route: RouteUpdate):
-    db.routes.update_one({"_id": ObjectId(route_id)}, {"$set": route.dict(exclude_unset=True)})
-    updated = db.routes.find_one({"_id": ObjectId(route_id)})
-    return RouteInDB(**updated, id=str(route_id))
+def create_route(route: RouteCreate) -> RouteInDB:
+    new_route = RouteInDB(id=str(uuid4()), **route.dict())
+    routes_db.append(new_route)
+    return new_route
 
-def toggle_route_status(route_id: str):
-    route = db.routes.find_one({"_id": ObjectId(route_id)})
-    new_status = "inactive" if route["status"] == "active" else "active"
-    db.routes.update_one({"_id": ObjectId(route_id)}, {"$set": {"status": new_status}})
-    updated = db.routes.find_one({"_id": ObjectId(route_id)})
-    return RouteInDB(**updated, id=str(route_id))
+def update_route(route_id: str, route: RouteUpdate) -> Optional[RouteInDB]:
+    for index, existing_route in enumerate(routes_db):
+        if existing_route.id == route_id:
+            updated_data = existing_route.dict()
+            update_fields = route.dict(exclude_unset=True)
+            updated_data.update(update_fields)
+            updated_route = RouteInDB(**updated_data)
+            routes_db[index] = updated_route
+            return updated_route
+    return None
 
-def delete_route(route_id: str):
-    db.routes.delete_one({"_id": ObjectId(route_id)})
+def toggle_route_status(route_id: str) -> Optional[RouteInDB]:
+    for index, route in enumerate(routes_db):
+        if route.id == route_id:
+            new_status = "inactive" if route.status == "active" else "active"
+            updated_route = route.copy(update={"status": new_status})
+            routes_db[index] = updated_route
+            return updated_route
+    return None
+
+def delete_route(route_id: str) -> bool:
+    global routes_db
+    original_len = len(routes_db)
+    routes_db = [r for r in routes_db if r.id != route_id]
+    return len(routes_db) != original_len
