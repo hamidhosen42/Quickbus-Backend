@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends, status
 from pydantic import BaseModel
+from app.db import db
 from app.core.security import verify_password, create_access_token, hash_password
-from app.db.mongo import db
 from datetime import datetime
 
 router = APIRouter()
@@ -23,7 +23,7 @@ class SignUpRequest(BaseModel):
 # 🚀 Signup
 @router.post("/signup")
 async def signup(payload: SignUpRequest):
-    existing_user = await db.users.find_one({"username": payload.username})
+    existing_user = await db["users"].find_one({"username": payload.username})  # Corrected line
     if existing_user:
         raise HTTPException(status_code=400, detail="Username already exists")
 
@@ -36,7 +36,7 @@ async def signup(payload: SignUpRequest):
         "role": payload.role
     }
 
-    await db.users.insert_one(user_data)
+    await db["users"].insert_one(user_data)  # Corrected line
 
     return {
         "statusCode": 201,
@@ -53,7 +53,7 @@ async def signup(payload: SignUpRequest):
 # 🚀 Login
 @router.post("/login")
 async def login(data: LoginRequest):
-    db_user = await db.users.find_one({"username": data.username})
+    db_user = await db["users"].find_one({"username": data.username})  # Corrected line
     if not db_user or not verify_password(data.password, db_user["password"]):
         raise HTTPException(status_code=401, detail="Invalid credentials")
 

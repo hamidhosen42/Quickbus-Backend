@@ -3,8 +3,8 @@
 from fastapi import Depends, HTTPException
 from fastapi.security import OAuth2PasswordBearer
 from jose import jwt, JWTError
-from app.db.mongo import db
 import os
+from app import db
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
 SECRET_KEY = os.getenv("JWT_SECRET", "secret")

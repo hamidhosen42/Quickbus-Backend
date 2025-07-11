@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
 from bson import ObjectId
-from app.db.mongo import db
+from app import db
 from app.models.ticket import Ticket, TicketInDB
 
 router = APIRouter()

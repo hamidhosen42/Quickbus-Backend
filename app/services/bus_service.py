@@ -1,4 +1,4 @@
-from app.db.mongo import db
+from app import db
 from app.models.bus import BusCreate, BusInDB, BusUpdate
 from bson import ObjectId
 
